@@ -4,7 +4,7 @@ on:
   pull_request:
     
 jobs:
-  build:
+  test-connector:
     runs-on: self-hosted
     env: # Or as an environment variable
       es_api_token: ${{ secrets.ES_API_TOKEN }}
@@ -12,13 +12,25 @@ jobs:
       es_domain: ${{ secrets.ES_DOMAIN }}
     steps:
      # Runs a set of commands using the runners shell
-    - name: Run a multi-line script
-      run: |
-        echo $es_domain,
-        echo $es_api_token.
-        echo ${GITHUB_REF##*/}
-    # Runs a single command using the runners shell
-    - name: Run a one-line script
-      run: curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}"
-
+    - name: Install dependencies
+      run: apt install jq -y
+      
+    - name: Send Container creation request
+      run: CONTAINERID=$(curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}")
     
+    - name: Test if variables are persistend between runs
+      run: echo $CONTAINERID
+      
+    - name: Wait 15 Minutes for the tests to be done
+      run: sleep 15m
+    
+    - name: Retrieve Testresults
+      run: |
+        JSONRESPONSE=$(curl --location --request GET "es.test/api/containers/test/$CONTAINERID?token=1234abcd5678")
+        SUCCESS=$(echo $JSONRESPONSE | jq -r '.is_successful')
+        
+        echo $JSONRESPONSE | jq -r '.result'
+
+        if [[ $SUCCESS -eq 0 ]]; then
+          exit 1
+        fi
