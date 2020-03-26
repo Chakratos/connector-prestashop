@@ -22,15 +22,17 @@ jobs:
       run: echo $CONTAINERID
       
     - name: Wait 15 Minutes for the tests to be done
-      run: sleep 15m
+      run: sleep 15s
     
     - name: Retrieve Testresults
       run: |
         JSONRESPONSE=$(curl --location --request GET "es.test/api/containers/test/$CONTAINERID?token=1234abcd5678")
         SUCCESS=$(echo $JSONRESPONSE | jq -r '.is_successful')
         
-        echo $JSONRESPONSE | jq -r '.result'
+        echo $JSONRESPONSE | jq -r '.result' > output.txt
 
-        if [[ $SUCCESS -eq 0 ]]; then
-          exit 1
-        fi
+    - name: Save Results to artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: output
+        path: output.txt
