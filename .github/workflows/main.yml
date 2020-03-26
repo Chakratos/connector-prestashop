@@ -13,7 +13,7 @@ jobs:
     steps:
      # Runs a set of commands using the runners shell
     - name: Install dependencies
-      run: apt install jq -y
+      run: sudo apt install jq -y
       
     - name: Send Container creation request
       run: CONTAINERID=$(curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}")
