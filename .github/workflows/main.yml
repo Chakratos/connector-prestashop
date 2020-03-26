@@ -8,7 +8,8 @@ jobs:
     runs-on: self-hosted
     env: # Or as an environment variable
       es_api_token: ${{ secrets.ES_API_TOKEN }}
-      shop: ${{ secrets.shop }}
+      shop: ${{ secrets.SHOP }}
+      es_domain: ${{ secrets.ES_DOMAIN }}
     steps:
      # Runs a set of commands using the runners shell
     - name: Run a multi-line script
