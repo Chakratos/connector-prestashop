@@ -6,7 +6,7 @@ on:
 jobs:
   test-connector:
     runs-on: self-hosted
-    env: # Or as an environment variable
+    env:
       es_api_token: ${{ secrets.ES_API_TOKEN }}
       shop: ${{ secrets.SHOP }}
       es_domain: ${{ secrets.ES_DOMAIN }}
@@ -16,7 +16,9 @@ jobs:
       run: sudo apt install jq -y
       
     - name: Send Container creation request
-      run: CONTAINERID=$(curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}")
+      run: |
+        export CONTAINERID=$(curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}")
+        echo "::set-env name=CONTAINERID::$CONTAINERID"
     
     - name: Test if variables are persistend between runs
       run: echo $CONTAINERID
@@ -26,13 +28,20 @@ jobs:
     
     - name: Retrieve Testresults
       run: |
-        JSONRESPONSE=$(curl --location --request GET "es.test/api/containers/test/$CONTAINERID?token=1234abcd5678")
-        SUCCESS=$(echo $JSONRESPONSE | jq -r '.is_successful')
+        JSONRESPONSE=$(curl --location --request GET "$es_domain/api/containers/test/$CONTAINERID?token=$es_api_token")
+        export SUCCESS=$(echo $JSONRESPONSE | jq -r '.is_successful')
         
         echo $JSONRESPONSE | jq -r '.result' > output.txt
+        echo "::set-env name=JSONRESPONSE::$JSONRESPONSE"
 
-    - name: Save Results to artifact
+    - name: Save Results as artifact
       uses: actions/upload-artifact@v1
       with:
         name: output
         path: output.txt
+      
+    - name: Fail if needed
+      run: |
+        if [[ $SUCCESS -eq 0 ]]; then
+          exit 1
+        fi
