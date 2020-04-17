@@ -19,9 +19,6 @@ jobs:
       run: |
         export CONTAINERID=$(curl --location --request POST "$es_domain/api/containers/test/store" --form "token=$es_api_token" --form "shop=$shop" --form "branch=${GITHUB_REF##*/}")
         echo "::set-env name=CONTAINERID::$CONTAINERID"
-    
-    - name: Test if variables are persistend between runs
-      run: echo $CONTAINERID
       
     - name: Wait 15 Minutes for the tests to be done
       run: sleep 15m
