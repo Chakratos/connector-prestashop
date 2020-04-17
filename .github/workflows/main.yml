@@ -24,7 +24,7 @@ jobs:
       run: echo $CONTAINERID
       
     - name: Wait 15 Minutes for the tests to be done
-      run: sleep 15s
+      run: sleep 15m
     
     - name: Retrieve Testresults
       run: |
